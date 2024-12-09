@@ -7,6 +7,14 @@
   "dependencies": {
     "com.google.firebase.auth": "11.9.0",
     "com.google.firebase.app": "11.9.0",
+    "com.google.firebase.firestore": "11.9.0",
+    "com.google.firebase.storage" : "11.9.0",
+    "com.google.firebase.messaging": "11.9.0",
+    "com.google.firebase.crashlytics": "11.9.0",
+    "com.google.firebase.installations": "11.9.0",
+    "com.google.firebase.database": "11.9.0",
+    "com.google.firebase.analytics": "11.9.0",
+    "com.google.firebase.remote-config": "11.9.0",
     "com.google.external-dependency-manager": "1.2.175"
   }
 }
