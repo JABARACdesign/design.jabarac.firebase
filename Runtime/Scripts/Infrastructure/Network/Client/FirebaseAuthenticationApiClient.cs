@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Firebase;
 using Firebase.Auth;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Entity.API;
@@ -176,6 +177,92 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     status: APIStatus.Code.Error,
                     data: null,
                     errorMessage: $"ユーザー登録に失敗しました。:{e.Message}");
+            }
+        } 
+        
+        /// <summary>
+        /// 匿名アカウントをメールアドレス認証にアップグレードする
+        /// </summary>
+        /// <param name="email">メールアドレス</param>
+        /// <param name="password">パスワード</param>
+        /// <param name="displayName">表示名</param>
+        /// <param name="cancellationToken">キャンセルトークン</param>
+        /// <returns>APIレスポンス</returns>
+        public async UniTask<IAPIResponse<UpgradeAnonymousAccountResponseDto>> UpgradeAnonymousAccountAsync(
+            string email,
+            string password,
+            string displayName,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 現在のユーザーが匿名かチェック
+                var user = Auth.CurrentUser;
+                if (user == null)
+                {
+                    return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                        status: APIStatus.Code.Error,
+                        data: null,
+                        errorMessage: "ログインしていません。");
+                }
+
+                if (!user.IsAnonymous)
+                {
+                    return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                        status: APIStatus.Code.Error,
+                        data: null,
+                        errorMessage: "匿名ユーザーではありません。");
+                }
+
+                // EmailCredentialの作成
+                var credential = EmailAuthProvider.GetCredential(email, password);
+
+                // 匿名アカウントと認証情報をリンク
+                var result = await user.LinkWithCredentialAsync(credential)
+                    .AsUniTask()
+                    .AttachExternalCancellation(cancellationToken);
+
+                // プロフィール更新
+                if (!string.IsNullOrEmpty(displayName))
+                {
+                    var userProfile = new UserProfile
+                    {
+                        DisplayName = displayName
+                    };
+                    await user.UpdateUserProfileAsync(profile: userProfile);
+                }
+
+                // アップグレード成功
+                var dto = new UpgradeAnonymousAccountResponseDto(
+                    userId: result.User.UserId,
+                    email: result.User.Email,
+                    displayName: result.User.DisplayName ?? displayName);
+
+                return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                    status: APIStatus.Code.Success,
+                    data: dto,
+                    errorMessage: null);
+            }
+            catch (OperationCanceledException)
+            {
+                return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                    status: APIStatus.Code.Error,
+                    data: null,
+                    errorMessage: "アカウントアップグレードがキャンセルされました。");
+            }
+            catch (FirebaseException ex)
+            {
+                return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                    status: APIStatus.Code.Error,
+                    data: null,
+                    errorMessage: $"アカウントアップグレードに失敗しました：{ex.Message}");
+            }
+            catch (Exception e)
+            {
+                return new APIResponse<UpgradeAnonymousAccountResponseDto>(
+                    status: APIStatus.Code.Error,
+                    data: null,
+                    errorMessage: $"アカウントアップグレードに失敗しました：{e.Message}");
             }
         }
         
