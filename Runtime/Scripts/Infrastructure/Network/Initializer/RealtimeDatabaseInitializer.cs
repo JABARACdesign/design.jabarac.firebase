@@ -6,7 +6,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     /// <summary>
     /// RealtimeDatabaseの初期化クラス
     /// </summary>
-    public class RealtimeDatabaseInitializer
+    public class RealtimeDatabaseInitializer : IRealtimeDatabaseInitializer
     {
         private FirebaseDatabase _database;
         
