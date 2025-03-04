@@ -8,5 +8,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     public interface IFirestoreInitializer
     {
         FirebaseFirestore Firestore { get; }
+        
+        void Initialize();
     }
 }

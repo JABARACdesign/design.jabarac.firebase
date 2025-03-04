@@ -27,13 +27,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         
         #region Private Field
         
-        private AuthenticationInitializer _authenticationInitializer;
+        private IAuthenticationInitializer _authenticationInitializer;
         
-        private FirestoreInitializer _firestoreInitializer;
+        private IFirestoreInitializer _firestoreInitializer;
         
-        private RealtimeDatabaseInitializer _realtimeDatabaseInitializer;
+        private IRealtimeDatabaseInitializer _realtimeDatabaseInitializer;
         
-        private CloudStorageInitializer _cloudStorageInitializer;
+        private ICloudStorageInitializer _cloudStorageInitializer;
         
         #endregion
         
@@ -46,10 +46,10 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         /// <param name="cloudStorageInitializer">CloudStorageの初期化クラス</param>
         [Inject]
         public void Constructor(
-            AuthenticationInitializer authenticationInitializer,
-            FirestoreInitializer firestoreInitializer,
-            RealtimeDatabaseInitializer realtimeDatabaseInitializer,
-            CloudStorageInitializer cloudStorageInitializer)
+            IAuthenticationInitializer authenticationInitializer,
+            IFirestoreInitializer firestoreInitializer,
+            IRealtimeDatabaseInitializer realtimeDatabaseInitializer,
+            ICloudStorageInitializer cloudStorageInitializer)
         {
             _authenticationInitializer = authenticationInitializer;
             _firestoreInitializer = firestoreInitializer;

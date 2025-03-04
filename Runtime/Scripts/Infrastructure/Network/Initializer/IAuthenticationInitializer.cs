@@ -7,6 +7,8 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     /// </summary>
     public interface IAuthenticationInitializer
     {
-        public FirebaseAuth Auth { get; }
+        FirebaseAuth Auth { get; }
+
+        void Initialize();
     }
 }

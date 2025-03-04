@@ -8,5 +8,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     public interface ICloudStorageInitializer
     {
         FirebaseStorage Storage { get; }
+        
+        void Initialize();
     }
 }

@@ -8,5 +8,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     public interface IRealtimeDatabaseInitializer
     {
         FirebaseDatabase Database { get; }
+        
+        void Initialize();
     }
 }
