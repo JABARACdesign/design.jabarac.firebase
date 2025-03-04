@@ -15,6 +15,18 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         IRealtimeDatabaseInitializer,
         ICloudStorageInitializer
     {
+        /// <summary>
+        /// 初期化設定。
+        /// </summary>
+        public class InitializeSettings
+        {
+            public bool IsUseFirestore { get; set; }
+            
+            public bool IsUseRealtimeDatabase { get; set; }
+            
+            public bool IsUseCloudStorage { get; set; }
+        }
+        
         public FirebaseAuth Auth { get; private set; }
         
         public FirebaseFirestore Firestore { get; private set; }
@@ -27,6 +39,8 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         
         #region Private Field
         
+        private InitializeSettings _settings;
+        
         private IAuthenticationInitializer _authenticationInitializer;
         
         private IFirestoreInitializer _firestoreInitializer;
@@ -38,19 +52,22 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         #endregion
         
         /// <summary>
-        /// コンストラクタ
+        /// コンストラクタ(DI)
         /// </summary>
+        /// <param name="settings">初期化設定</param>
         /// <param name="authenticationInitializer">Firebaseの認証の初期化クラス</param>
         /// <param name="firestoreInitializer">Firestoreの初期化クラス</param>
         /// <param name="realtimeDatabaseInitializer">RealtimeDatabaseの初期化クラス</param>
         /// <param name="cloudStorageInitializer">CloudStorageの初期化クラス</param>
         [Inject]
         public void Constructor(
+            InitializeSettings settings,
             IAuthenticationInitializer authenticationInitializer,
             IFirestoreInitializer firestoreInitializer,
             IRealtimeDatabaseInitializer realtimeDatabaseInitializer,
             ICloudStorageInitializer cloudStorageInitializer)
         {
+            _settings = settings;
             _authenticationInitializer = authenticationInitializer;
             _firestoreInitializer = firestoreInitializer;
             _realtimeDatabaseInitializer = realtimeDatabaseInitializer;
@@ -63,14 +80,25 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         public void Initialize()
         {
             _authenticationInitializer.Initialize();
-            _firestoreInitializer.Initialize();
-            _realtimeDatabaseInitializer.Initialize();
-            _cloudStorageInitializer.Initialize();
-            
             Auth = _authenticationInitializer.Auth;
-            Firestore = _firestoreInitializer.Firestore;
-            Database = _realtimeDatabaseInitializer.Database;
-            Storage = _cloudStorageInitializer.Storage;
+            
+            if (_settings.IsUseFirestore)
+            {
+                _firestoreInitializer.Initialize();
+                Firestore = _firestoreInitializer.Firestore;
+            }
+            
+            if (_settings.IsUseRealtimeDatabase)
+            {
+                _realtimeDatabaseInitializer.Initialize();
+                Database = _realtimeDatabaseInitializer.Database;
+            }
+            
+            if (_settings.IsUseCloudStorage)
+            {
+                _cloudStorageInitializer.Initialize();
+                Storage = _cloudStorageInitializer.Storage;
+            }
             
             IsInitialized = true;
         }
