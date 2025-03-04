@@ -20,11 +20,24 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
         /// </summary>
         public class InitializeSettings
         {
-            public bool IsUseFirestore { get; set; }
+            public bool IsUseFirestore { get; private set; }
             
-            public bool IsUseRealtimeDatabase { get; set; }
+            public bool IsUseRealtimeDatabase { get; private set; }
             
-            public bool IsUseCloudStorage { get; set; }
+            public bool IsUseCloudStorage { get; private set; }
+            
+            /// <summary>
+            /// コンストラクタ。
+            /// </summary>
+            /// <param name="isUseFirestore">Firestoreを使用するか</param>
+            /// <param name="isUseRealtimeDatabase">RealtimeDatabaseを使用するか</param>
+            /// <param name="isUseCloudStorage">CloudStorageを使用するか</param>
+            public InitializeSettings(bool isUseFirestore, bool isUseRealtimeDatabase, bool isUseCloudStorage)
+            {
+                IsUseFirestore = isUseFirestore;
+                IsUseRealtimeDatabase = isUseRealtimeDatabase;
+                IsUseCloudStorage = isUseCloudStorage;
+            }
         }
         
         public FirebaseAuth Auth { get; private set; }
