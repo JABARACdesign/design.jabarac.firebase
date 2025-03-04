@@ -6,7 +6,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
     /// <summary>
     /// Firestoreの初期化クラス
     /// </summary>
-    public class FirestoreInitializer
+    public class FirestoreInitializer : IFirestoreInitializer
     {
         private FirebaseFirestore _firestore;
         
