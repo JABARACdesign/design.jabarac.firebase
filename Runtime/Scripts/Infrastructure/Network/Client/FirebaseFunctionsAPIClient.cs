@@ -3,8 +3,10 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Firebase.Functions;
 using JABARACdesign.Base.Application.Interface;
+using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.API;
 using JABARACdesign.Base.Domain.Entity.Helper;
+using JABARACdesign.Base.Domain.Interface;
 using JABARACdesign.Base.Infrastructure.Helper;
 using JABARACdesign.Base.Infrastructure.Network.API;
 using JABARACdesign.Base.Infrastructure.Network.Client;
@@ -52,7 +54,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var callable = Functions.GetHttpsCallable(name: functionName);
                 
                 // GETリクエストの場合は空のオブジェクトを送信
-                var jsonData = request.Method == APIHelper.HttpMethod.GET ? "{}" : "{}";
+                var jsonData = request.MethodType == APIDefinition.HttpMethodType.GET ? "{}" : "{}";
                 
                 // Firebase Functionsを呼び出し
                 var result = await callable.CallAsync(data: jsonData)
@@ -120,7 +122,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var callable = Functions.GetHttpsCallable(name: functionName);
                 
                 // GETリクエストの場合は空のオブジェクトを送信
-                var jsonData = request.Method == APIHelper.HttpMethod.GET ? "{}" : "{}";
+                var jsonData = request.MethodType == APIDefinition.HttpMethodType.GET ? "{}" : "{}";
                 
                 // Firebase Functionsを呼び出し
                 await callable.CallAsync(data: jsonData)
