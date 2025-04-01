@@ -7,7 +7,6 @@ using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.API;
 using JABARACdesign.Base.Domain.Entity.Helper;
 using JABARACdesign.Base.Domain.Interface;
-using JABARACdesign.Base.Infrastructure.Helper;
 using JABARACdesign.Base.Infrastructure.Network.API;
 using JABARACdesign.Base.Infrastructure.Network.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
