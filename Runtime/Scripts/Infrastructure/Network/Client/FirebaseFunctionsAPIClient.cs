@@ -23,39 +23,17 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
     /// </summary>
     public class FirebaseFunctionsApiClient : IFunctionApiClient
     {
-        /// <summary>
-        /// 初期化設定。
-        /// </summary>
-        public class InitializeSettings
-        {
-            private readonly string _baseFunctionsUrl;
-            
-            public string BaseFunctionsUrl => _baseFunctionsUrl;
-            
-            /// <summary>
-            /// コンストラクタ。
-            /// </summary>
-            /// <param name="baseFunctionsUrl">ベースのFirebaseFunctionsのURL</param>
-            public InitializeSettings(
-                string baseFunctionsUrl)
-            {
-                _baseFunctionsUrl = baseFunctionsUrl;
-            }
-        }
         
-        private readonly InitializeSettings _settings;
         
         private readonly IAuthenticationInitializer _initializer;
         
         /// <summary>
         /// コンストラクタ。
         /// </summary>
-        /// <param name="settings">初期化設定</param>
         /// <param name="initializer">イニシャライザ</param>
         [Inject]
-        public FirebaseFunctionsApiClient(InitializeSettings settings, IAuthenticationInitializer initializer)
+        public FirebaseFunctionsApiClient( IAuthenticationInitializer initializer)
         {
-            _settings = settings;
             _initializer = initializer;
         }
         
@@ -73,10 +51,10 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 // リクエストURLの構築
-                var url = BuildUrl(request.Uri);
+                var url = request.Uri;
                 
                 // UnityWebRequestの作成
-                using var webRequest = CreateWebRequest(url, request.MethodType, "{}");
+                using var webRequest = await CreateWebRequestAsync(url, request.MethodType, "{}");
                 
                 // リクエスト送信
                 await webRequest.SendWebRequest().ToUniTask(cancellationToken: cancellationToken);
@@ -105,13 +83,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 // リクエストURLの構築
-                var url = BuildUrl(request.Uri);
+                var url = request.Uri;
                 
                 // DTOをJSONに変換
                 var jsonData = JsonConvert.SerializeObject(value: request.Dto);
                 
                 // UnityWebRequestの作成
-                using var webRequest = CreateWebRequest(url, request.MethodType, jsonData);
+                using var webRequest = await CreateWebRequestAsync(url, request.MethodType, jsonData);
                 
                 // リクエスト送信
                 await webRequest.SendWebRequest().ToUniTask(cancellationToken: cancellationToken);
@@ -138,10 +116,10 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 // リクエストURLの構築
-                var url = BuildUrl(request.Uri);
+                var url = request.Uri;
                 
                 // UnityWebRequestの作成
-                using var webRequest = CreateWebRequest(url, request.MethodType, "{}");
+                using var webRequest = await CreateWebRequestAsync(url, request.MethodType, "{}");
                 
                 // リクエスト送信
                 await webRequest.SendWebRequest().ToUniTask(cancellationToken: cancellationToken);
@@ -176,13 +154,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 // リクエストURLの構築
-                var url = BuildUrl(request.Uri);
+                var url = request.Uri;
                 
                 // DTOをJSONに変換
                 var jsonData = JsonConvert.SerializeObject(value: request.Dto);
                 
                 // UnityWebRequestの作成
-                using var webRequest = CreateWebRequest(url, request.MethodType, jsonData);
+                using var webRequest = await CreateWebRequestAsync(url, request.MethodType, jsonData);
                 
                 // リクエスト送信
                 await webRequest.SendWebRequest().ToUniTask(cancellationToken: cancellationToken);
@@ -204,36 +182,9 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         }
         
         /// <summary>
-        /// リクエストURLを構築するメソッド
-        /// </summary>
-        private string BuildUrl(string uri)
-        {
-            // Uriが既に完全なURLの場合はそのまま使用
-            if (uri.StartsWith("http://") || uri.StartsWith("https://"))
-            {
-                return uri;
-            }
-            
-            // Uriの先頭の '/' を削除
-            if (uri.StartsWith("/"))
-            {
-                uri = uri.Substring(1);
-            }
-            
-            // ベースURLとパスの間に '/' があることを確認
-            var baseUrl = _settings.BaseFunctionsUrl;
-            if (!baseUrl.EndsWith("/"))
-            {
-                baseUrl += "/";
-            }
-            
-            return baseUrl + uri;
-        }
-        
-        /// <summary>
         /// UnityWebRequestを作成するメソッド
         /// </summary>
-        private UnityWebRequest CreateWebRequest(string url, APIDefinition.HttpMethodType methodType, string jsonData)
+        private async UniTask<UnityWebRequest> CreateWebRequestAsync(string url, APIDefinition.HttpMethodType methodType, string jsonData)
         {
             UnityWebRequest webRequest;
             
@@ -268,7 +219,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             }
             
             // Firebase認証トークンをヘッダーに追加
-            SetAuthorizationHeader(webRequest);
+            await SetAuthorizationHeaderAsync(webRequest);
             
             return webRequest;
         }
@@ -276,14 +227,14 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// <summary>
         /// 認証ヘッダーを設定するメソッド
         /// </summary>
-        private async void SetAuthorizationHeader(UnityWebRequest webRequest)
+        private async UniTask SetAuthorizationHeaderAsync(UnityWebRequest webRequest)
         {
             try
             {
                 // 現在のユーザーがいるか確認
                 if (_initializer.Auth.CurrentUser != null)
                 {
-                    // 同期的にトークンを取得 (UniTaskを使用して非同期処理を待機)
+                    // 非同期でトークンを取得
                     string token = await GetAuthTokenAsync();
                     if (!string.IsNullOrEmpty(token))
                     {
