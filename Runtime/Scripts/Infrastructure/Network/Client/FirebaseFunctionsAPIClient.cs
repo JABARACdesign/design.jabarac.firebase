@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Web;
 using Cysharp.Threading.Tasks;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Definition;
@@ -23,8 +26,6 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
     /// </summary>
     public class FirebaseFunctionsApiClient : IFunctionApiClient
     {
-        
-        
         private readonly IAuthenticationInitializer _initializer;
         
         /// <summary>
@@ -32,7 +33,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// </summary>
         /// <param name="initializer">イニシャライザ</param>
         [Inject]
-        public FirebaseFunctionsApiClient( IAuthenticationInitializer initializer)
+        public FirebaseFunctionsApiClient(IAuthenticationInitializer initializer)
         {
             _initializer = initializer;
         }
@@ -82,11 +83,24 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         {
             try
             {
-                // リクエストURLの構築
-                var url = request.Uri;
+                string url = request.Uri;
+                string jsonData = null;
                 
-                // DTOをJSONに変換
-                var jsonData = JsonConvert.SerializeObject(value: request.Dto);
+                // GETリクエストの場合は、DTOをクエリパラメータに変換
+                if (request.MethodType == APIDefinition.HttpMethodType.GET)
+                {
+                    var queryParams = ConvertDtoToQueryParams(request.Dto);
+                    if (!string.IsNullOrEmpty(queryParams))
+                    {
+                        // URLに?が含まれているかチェックして、適切な接続文字を選択
+                        url = url.Contains("?") ? $"{url}&{queryParams}" : $"{url}?{queryParams}";
+                    }
+                }
+                else
+                {
+                    // GET以外のメソッドはJSONボディを使用
+                    jsonData = JsonConvert.SerializeObject(value: request.Dto);
+                }
                 
                 // UnityWebRequestの作成
                 using var webRequest = await CreateWebRequestAsync(url, request.MethodType, jsonData);
@@ -153,11 +167,24 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         {
             try
             {
-                // リクエストURLの構築
-                var url = request.Uri;
+                string url = request.Uri;
+                string jsonData = null;
                 
-                // DTOをJSONに変換
-                var jsonData = JsonConvert.SerializeObject(value: request.Dto);
+                // GETリクエストの場合は、DTOをクエリパラメータに変換
+                if (request.MethodType == APIDefinition.HttpMethodType.GET)
+                {
+                    var queryParams = ConvertDtoToQueryParams(request.Dto);
+                    if (!string.IsNullOrEmpty(queryParams))
+                    {
+                        // URLに?が含まれているかチェックして、適切な接続文字を選択
+                        url = url.Contains("?") ? $"{url}&{queryParams}" : $"{url}?{queryParams}";
+                    }
+                }
+                else
+                {
+                    // GET以外のメソッドはJSONボディを使用
+                    jsonData = JsonConvert.SerializeObject(value: request.Dto);
+                }
                 
                 // UnityWebRequestの作成
                 using var webRequest = await CreateWebRequestAsync(url, request.MethodType, jsonData);
@@ -182,6 +209,57 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         }
         
         /// <summary>
+        /// DTOオブジェクトをクエリパラメータ文字列に変換するメソッド
+        /// </summary>
+        /// <typeparam name="TDto">DTOの型</typeparam>
+        /// <param name="dto">変換するDTOオブジェクト</param>
+        /// <returns>key=value&key2=value2形式のクエリパラメータ文字列</returns>
+        private string ConvertDtoToQueryParams<TDto>(TDto dto)
+        {
+            if (dto == null)
+                return string.Empty;
+            
+            var queryParams = new List<string>();
+            
+            // リフレクションを使用してDTOのプロパティを取得
+            var properties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            
+            foreach (var property in properties)
+            {
+                var value = property.GetValue(dto);
+                
+                // null値は除外
+                if (value == null)
+                    continue;
+                
+                // リストや配列の場合は複数のクエリパラメータに変換
+                if (property.PropertyType.IsArray || (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>)))
+                {
+                    var enumerable = value as System.Collections.IEnumerable;
+                    if (enumerable != null)
+                    {
+                        foreach (var item in enumerable)
+                        {
+                            if (item != null)
+                            {
+                                // 配列アイテムをクエリパラメータとして追加（例：colors[]=red&colors[]=blue）
+                                queryParams.Add($"{HttpUtility.UrlEncode(property.Name)}[]={HttpUtility.UrlEncode(item.ToString())}");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // 通常のプロパティはkey=value形式で追加
+                    queryParams.Add($"{HttpUtility.UrlEncode(property.Name)}={HttpUtility.UrlEncode(value.ToString())}");
+                }
+            }
+            
+            // クエリパラメータを&で結合
+            return string.Join("&", queryParams);
+        }
+        
+        /// <summary>
         /// UnityWebRequestを作成するメソッド
         /// </summary>
         private async UniTask<UnityWebRequest> CreateWebRequestAsync(string url, APIDefinition.HttpMethodType methodType, string jsonData)
@@ -196,22 +274,37 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     
                 case APIDefinition.HttpMethodType.POST:
                     webRequest = new UnityWebRequest(url, "POST");
-                    byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
-                    webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                    webRequest.downloadHandler = new DownloadHandlerBuffer();
-                    webRequest.SetRequestHeader("Content-Type", "application/json");
+                    if (!string.IsNullOrEmpty(jsonData))
+                    {
+                        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+                        webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                        webRequest.downloadHandler = new DownloadHandlerBuffer();
+                        webRequest.SetRequestHeader("Content-Type", "application/json");
+                    }
+                    else
+                    {
+                        webRequest.downloadHandler = new DownloadHandlerBuffer();
+                    }
                     break;
                     
                 case APIDefinition.HttpMethodType.PUT:
                     webRequest = new UnityWebRequest(url, "PUT");
-                    bodyRaw = Encoding.UTF8.GetBytes(jsonData);
-                    webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                    webRequest.downloadHandler = new DownloadHandlerBuffer();
-                    webRequest.SetRequestHeader("Content-Type", "application/json");
+                    if (!string.IsNullOrEmpty(jsonData))
+                    {
+                        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+                        webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                        webRequest.downloadHandler = new DownloadHandlerBuffer();
+                        webRequest.SetRequestHeader("Content-Type", "application/json");
+                    }
+                    else
+                    {
+                        webRequest.downloadHandler = new DownloadHandlerBuffer();
+                    }
                     break;
                     
                 case APIDefinition.HttpMethodType.DELETE:
                     webRequest = UnityWebRequest.Delete(url);
+                    webRequest.downloadHandler = new DownloadHandlerBuffer();
                     break;
                     
                 default:
