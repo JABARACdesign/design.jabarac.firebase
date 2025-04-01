@@ -10,6 +10,7 @@ using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.API;
 using JABARACdesign.Base.Domain.Entity.Helper;
 using JABARACdesign.Base.Domain.Interface;
+using JABARACdesign.Base.Infrastructure.Dto.API;
 using JABARACdesign.Base.Infrastructure.Network.API;
 using JABARACdesign.Base.Infrastructure.Network.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
@@ -80,6 +81,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         public async UniTask<IAPIResponse<TResponseData>> SendAsync<TDto, TResponseData>(
             IApiRequest<TDto> request,
             CancellationToken cancellationToken = default)
+        where TDto : IQueryParamConvertible
         {
             try
             {
@@ -89,7 +91,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 // GETリクエストの場合は、DTOをクエリパラメータに変換
                 if (request.MethodType == APIDefinition.HttpMethodType.GET)
                 {
-                    var queryParams = ConvertDtoToQueryParams(request.Dto);
+                    var queryParams = request.Dto.ToQueryParams();
                     if (!string.IsNullOrEmpty(queryParams))
                     {
                         // URLに?が含まれているかチェックして、適切な接続文字を選択
@@ -164,6 +166,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         public async UniTask<IAPIResponse> SendAsync<TDto>(
             IApiRequest<TDto> request,
             CancellationToken cancellationToken = default)
+        where TDto : IQueryParamConvertible
         {
             try
             {
@@ -173,7 +176,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 // GETリクエストの場合は、DTOをクエリパラメータに変換
                 if (request.MethodType == APIDefinition.HttpMethodType.GET)
                 {
-                    var queryParams = ConvertDtoToQueryParams(request.Dto);
+                    var queryParams = request.Dto.ToQueryParams();
                     if (!string.IsNullOrEmpty(queryParams))
                     {
                         // URLに?が含まれているかチェックして、適切な接続文字を選択
@@ -208,56 +211,6 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             }
         }
         
-        /// <summary>
-        /// DTOオブジェクトをクエリパラメータ文字列に変換するメソッド
-        /// </summary>
-        /// <typeparam name="TDto">DTOの型</typeparam>
-        /// <param name="dto">変換するDTOオブジェクト</param>
-        /// <returns>key=value&key2=value2形式のクエリパラメータ文字列</returns>
-        private string ConvertDtoToQueryParams<TDto>(TDto dto)
-        {
-            if (dto == null)
-                return string.Empty;
-            
-            var queryParams = new List<string>();
-            
-            // リフレクションを使用してDTOのプロパティを取得
-            var properties = typeof(TDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            
-            foreach (var property in properties)
-            {
-                var value = property.GetValue(dto);
-                
-                // null値は除外
-                if (value == null)
-                    continue;
-                
-                // リストや配列の場合は複数のクエリパラメータに変換
-                if (property.PropertyType.IsArray || (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>)))
-                {
-                    var enumerable = value as System.Collections.IEnumerable;
-                    if (enumerable != null)
-                    {
-                        foreach (var item in enumerable)
-                        {
-                            if (item != null)
-                            {
-                                // 配列アイテムをクエリパラメータとして追加（例：colors[]=red&colors[]=blue）
-                                queryParams.Add($"{HttpUtility.UrlEncode(property.Name)}[]={HttpUtility.UrlEncode(item.ToString())}");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // 通常のプロパティはkey=value形式で追加
-                    queryParams.Add($"{HttpUtility.UrlEncode(property.Name)}={HttpUtility.UrlEncode(value.ToString())}");
-                }
-            }
-            
-            // クエリパラメータを&で結合
-            return string.Join("&", queryParams);
-        }
         
         /// <summary>
         /// UnityWebRequestを作成するメソッド
