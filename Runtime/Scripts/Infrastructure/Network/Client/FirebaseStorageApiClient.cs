@@ -5,9 +5,9 @@ using Firebase.Storage;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.Helper;
+using JABARACdesign.Base.Infrastructure.Network;
 using JABARACdesign.Base.Infrastructure.Network.API;
 using JABARACdesign.Base.Infrastructure.Network.Client;
-using JABARACdesign.Base.Infrastructure.PathProvider;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using VContainer;
 using StatusCode = JABARACdesign.Base.Domain.Entity.API.APIStatus.Code;
@@ -20,56 +20,43 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
     public class FirebaseStorageApiClient : ICloudStorageClient
     {
         private readonly ICloudStorageInitializer _initializer;
-        private readonly ICloudStoragePathProvider _cloudStoragePathProvider;
-        private readonly ILocalPathProvider _localPathProvider;
+        private readonly IPathProvider _pathProvider;
         
         private FirebaseStorage Storage => _initializer.Storage;
         
         /// <summary>
         /// コンストラクタ。
         /// </summary>
-        /// <param name="cloudStoragePathProvider">クラウドストレージのパスプロパイダ</param>
-        /// <param name="localPathProvider">ローカルのパスプロパイダ</param>
+        /// <param name="pathProvider">ローカルのパスプロパイダ</param>
         /// <param name="initializer">Firebaseのイニシャライザ</param>
         [Inject]
         public FirebaseStorageApiClient(
-            ICloudStoragePathProvider cloudStoragePathProvider,
             ICloudStorageInitializer initializer,
-            ILocalPathProvider localPathProvider)
+            IPathProvider pathProvider)
         {
-            _cloudStoragePathProvider = cloudStoragePathProvider;
             _initializer = initializer;
-            _localPathProvider = localPathProvider;
+            _pathProvider = pathProvider;
         }
         
         /// <summary>
         /// ファイルをアップロードする。
         /// </summary>
-        /// <param name="userId">ユーザーID</param>
+        /// <typeparam name="TEnum">拡張子タイプの列挙型</typeparam>
         /// <param name="identifier">識別子</param>
-        /// <param name="extensionType">拡張子タイプ</param>
-        /// <param name="fileType">ファイルタイプ</param>
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>APIレスポンス</returns>
-        public async UniTask<IAPIResponse> UploadFileAsync(
-            string userId,
-            string identifier,
-            StorageDefinition.ExtensionType extensionType,
-            StorageDefinition.FileType fileType,
+        public async UniTask<IAPIResponse> UploadFileAsync<TEnum>(
+            TEnum identifier,
             CancellationToken cancellationToken = default)
+            where TEnum  : struct, Enum
         {
             try
             {
-                var storageReference =　GetFileReference(
-                    identifier: identifier,
-                    extensionType: extensionType,
-                    fileType: fileType);
-                var localFilePath = _localPathProvider.GetFilePath(
-                    userId: userId,
-                    identifier: identifier,
-                    extensionType: extensionType,
-                    fileType: fileType);
-                await storageReference.PutFileAsync(filePath: localFilePath, cancelToken: cancellationToken);
+                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var storageReference = GetFileReference(path);
+                await storageReference.PutFileAsync(
+                    filePath: path, cancelToken: 
+                    cancellationToken);
                 return new APIResponse(
                     status: StatusCode.Success);
             }
@@ -84,32 +71,23 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// <summary>
         /// ファイルをダウンロードする。
         /// </summary>
-        /// <param name="userId">ユーザーID</param>
         /// <param name="identifier">識別子</param>
-        /// <param name="extensionType">拡張子タイプ</param>
-        /// <param name="fileType">ファイルタイプ</param>
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>APIレスポンス(ローカルのパス)</returns>
-        public async UniTask<IAPIResponse<string>> DownloadFileAsync(
-            string userId,
-            string identifier,
-            StorageDefinition.ExtensionType extensionType,
-            StorageDefinition.FileType fileType,
+        public async UniTask<IAPIResponse<string>> DownloadFileAsync<TEnum>(
+            TEnum identifier,
             CancellationToken cancellationToken = default)
+        where TEnum : struct, Enum
         {
             try
             {
-                var storageReference =　GetFileReference(
-                    identifier: identifier,
-                    extensionType: extensionType,
-                    fileType: fileType);
-                var localFilePath = _localPathProvider.GetFilePath(
-                    userId: userId,
-                    identifier: identifier,
-                    extensionType: extensionType,
-                    fileType: fileType);
-                await storageReference.GetFileAsync(destinationFilePath: localFilePath, cancelToken: cancellationToken);
-                return new APIResponse<string>(status: StatusCode.Success, data: localFilePath);
+                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var storageReference = GetFileReference(path);
+                await storageReference.GetFileAsync(
+                    destinationFilePath: path, 
+                    cancelToken: cancellationToken);
+                
+                return new APIResponse<string>(status: StatusCode.Success, data: path);
             }
             catch (Exception ex)
             {
@@ -123,20 +101,14 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// ファイルの存在チェックを行う。
         /// </summary>
         /// <param name="identifier">識別子</param>
-        /// <param name="extensionType">拡張子タイプ</param>
-        /// <param name="fileType">ファイルタイプ</param>
         /// <returns>APIレスポンス(ファイルの有無)</returns>
-        public async UniTask<IAPIResponse<bool>> FileExistsAsync(
-            string identifier,
-            StorageDefinition.ExtensionType extensionType,
-            StorageDefinition.FileType fileType)
+        public async UniTask<IAPIResponse<bool>> FileExistsAsync<TEnum>(TEnum identifier)
+        where TEnum : struct, Enum
         {
             try
             {
-                var storageReference =　GetFileReference(
-                    identifier: identifier,
-                    extensionType: extensionType,
-                    fileType: fileType);
+                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var storageReference = GetFileReference(path);
                 var result = await storageReference.GetMetadataAsync();
                 return string.IsNullOrEmpty(value: result.Path)
                     ? new APIResponse<bool>(status: StatusCode.Error, data: false)
@@ -144,28 +116,20 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             }
             catch (Exception)
             {
-                return new APIResponse<bool>(status: StatusCode.Success, data: false);
+                return new APIResponse<bool>(status: StatusCode.Error, data: false);
             }
         }
         
         /// <summary>
         /// ファイルのリファレンスを取得する。
         /// </summary>
-        /// <param name="identifier">識別子</param>
-        /// <param name="extensionType">拡張子タイプ</param>
-        /// <param name="fileType">ファイルタイプ</param>
+        /// <param name="path">ファイルのパス</param>
         /// <returns>ファイルのリファレンス</returns>
-        private StorageReference GetFileReference(
-            string identifier,
-            StorageDefinition.ExtensionType extensionType,
-            StorageDefinition.FileType fileType)
+        private StorageReference GetFileReference(string path)
         {
-            var url = _cloudStoragePathProvider.GetFilePath(
-                identifier: identifier,
-                extensionType: extensionType,
-                fileType: fileType);
-            var storageReference =
-                Storage.GetReference(location: url);
+            // Firebase Storageは相対パスを期待するため、先頭の/を削除
+            var relativePath = path.StartsWith("/") ? path.Substring(1) : path;
+            var storageReference = Storage.GetReference(location: relativePath);
             
             return storageReference;
         }

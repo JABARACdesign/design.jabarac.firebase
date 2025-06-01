@@ -5,9 +5,9 @@ using Firebase.Database;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Entity.API;
 using JABARACdesign.Base.Domain.Helper;
+using JABARACdesign.Base.Infrastructure.Network;
 using JABARACdesign.Base.Infrastructure.Network.API;
 using JABARACdesign.Base.Infrastructure.Network.Client;
-using JABARACdesign.Base.Infrastructure.PathProvider;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using UnityEngine;
 using VContainer;
@@ -21,13 +21,18 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
     {
         private FirebaseDatabase Database => _initializer.Database;
         
-        private readonly IMstDataPathProvider _pathProvider;
+        private readonly IPathProvider _pathProvider;
         
         private readonly IRealtimeDatabaseInitializer _initializer;
         
+        /// <summary>
+        /// コンストラクタ(DI)。
+        /// </summary>
+        /// <param name="pathProvider">パスプロパイダ</param>
+        /// <param name="initializer"></param>
         [Inject]
         public RealtimeDatabaseMstDataApiClient(
-            IMstDataPathProvider pathProvider,
+            IPathProvider pathProvider,
             IRealtimeDatabaseInitializer initializer)
         {
             _pathProvider = pathProvider;
@@ -40,46 +45,61 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// <typeparam name="TDto">マスターデータのアイテムの型</typeparam>
         /// <returns>マスターデータのリスト</returns>
         /// <exception cref="Exception">データ取得に失敗した際のエラー</exception>
-        public async UniTask<IAPIResponse<List<TDto>>> GetMstDataAsync<TDto>()
+        public async UniTask<IAPIResponse<List<TDto>>> GetMstDataAsync<TDto, TEnum>(TEnum identifier)
+        where TEnum : struct, Enum
         {
-            var targetReference = GetDatabaseReference<TDto>();
+            var targetReference = GetDatabaseReference(identifier);
             return await GetDataListAsync<TDto>(reference: targetReference);
         }
-        
+
         /// <summary>
         /// 指定したクラスの特定のIDのデータを取得する (文字列IDの場合)。
         /// </summary>
         /// <typeparam name="TDto">指定クラス</typeparam>
+        /// <typeparam name="TEnum">データの型</typeparam>
+        ///　/// <param name="identifier">識別子</param>
         /// <param name="id">指定ID</param>
         /// <returns>指定IDのデータ</returns>
         /// <exception cref="Exception">データ取得に失敗した際のエラー</exception>
-        public async UniTask<IAPIResponse<TDto>> GetMstDataByIdAsync<TDto>(string id)
+        public async UniTask<IAPIResponse<TDto>> GetMstDataByIdAsync<TDto,TEnum>(TEnum identifier, string id)
+        where TEnum : struct, Enum
         {
-            var targetReference = GetDatabaseReference<TDto>().Child(pathString: id);
+            var targetReference = GetDatabaseReference(identifier)
+                .Child(pathString: id);
+            
             return await GetDataAsync<TDto>(reference: targetReference);
         }
-        
+
         /// <summary>
         /// 指定したクラスの特定のIDのデータを取得する (整数IDの場合)。
         /// </summary>
         /// <typeparam name="TDto">指定クラス</typeparam>
+        /// <typeparam name="TEnum">データの型</typeparam>
+        /// <param name="identifier">識別子</param>
         /// <param name="id">指定ID</param>
         /// <returns>指定IDのデータ</returns>
         /// <exception cref="Exception">データ取得に失敗した際のエラー</exception>
-        public async UniTask<IAPIResponse<TDto>> GetMstDataByIdAsync<TDto>(int id)
+        public async UniTask<IAPIResponse<TDto>> GetMstDataByIdAsync<TDto, TEnum>(
+            TEnum identifier,
+            int id)
+        where TEnum : struct, Enum
         {
-            var targetReference = GetDatabaseReference<TDto>().Child(pathString: id.ToString());
+            var targetReference = GetDatabaseReference(identifier)
+                .Child(pathString: id.ToString());
+            
             return await GetDataAsync<TDto>(reference: targetReference);
         }
         
         /// <summary>
         /// データベース参照を取得する
         /// </summary>
-        /// <typeparam name="TDto">データの型</typeparam>
+        /// <typeparam name="TEnum">データの型</typeparam>
         /// <returns>データベース参照</returns>
-        private DatabaseReference GetDatabaseReference<TDto>()
+        private DatabaseReference GetDatabaseReference<TEnum>(TEnum identifier)
+        where TEnum : struct, Enum
         {
-            var reference = _pathProvider.GetPath<TDto>(rootReference: Database.RootReference);
+            var path = _pathProvider.GetFilePath(identifier);
+            var reference = Database.GetReference(path: path);
             return reference;
         }
         
@@ -108,7 +128,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 return new APIResponse<List<TDto>>(
                     status: APIStatus.Code.Error,
-                    data: default,
+                    data: null,
                     errorMessage: $"データの取得に失敗しました。:{e.Message}"
                 );
             }
