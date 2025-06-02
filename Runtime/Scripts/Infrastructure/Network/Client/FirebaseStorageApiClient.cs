@@ -52,7 +52,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         {
             try
             {
-                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var path = _pathProvider.GetPath(identifier: identifier);
                 var storageReference = GetFileReference(path);
                 await storageReference.PutFileAsync(
                     filePath: path, cancelToken: 
@@ -81,7 +81,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         {
             try
             {
-                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var path = _pathProvider.GetPath(identifier: identifier);
                 var storageReference = GetFileReference(path);
                 await storageReference.GetFileAsync(
                     destinationFilePath: path, 
@@ -107,7 +107,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         {
             try
             {
-                var path = _pathProvider.GetFilePath(identifier: identifier);
+                var path = _pathProvider.GetPath(identifier: identifier);
                 var storageReference = GetFileReference(path);
                 var result = await storageReference.GetMetadataAsync();
                 return string.IsNullOrEmpty(value: result.Path)

@@ -98,7 +98,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         private DatabaseReference GetDatabaseReference<TEnum>(TEnum identifier)
         where TEnum : struct, Enum
         {
-            var path = _pathProvider.GetFilePath(identifier);
+            var path = _pathProvider.GetPath(identifier);
             var reference = Database.GetReference(path: path);
             return reference;
         }
