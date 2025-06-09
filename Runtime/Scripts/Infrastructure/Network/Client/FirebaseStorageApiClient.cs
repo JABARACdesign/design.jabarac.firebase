@@ -53,9 +53,10 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 var path = _pathProvider.GetPath(identifier: identifier);
+                var localPath = _pathProvider.GetLocalPath(identifier: identifier);
                 var storageReference = GetFileReference(path);
                 await storageReference.PutFileAsync(
-                    filePath: path, cancelToken: 
+                    filePath: localPath, cancelToken: 
                     cancellationToken);
                 return new APIResponse(
                     status: StatusCode.Success);
@@ -82,9 +83,10 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 var path = _pathProvider.GetPath(identifier: identifier);
+                var localPath = _pathProvider.GetLocalPath(identifier: identifier);
                 var storageReference = GetFileReference(path);
                 await storageReference.GetFileAsync(
-                    destinationFilePath: path, 
+                    destinationFilePath: localPath, 
                     cancelToken: cancellationToken);
                 
                 return new APIResponse<string>(status: StatusCode.Success, data: path);
