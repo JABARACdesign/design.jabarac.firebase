@@ -1,6 +1,6 @@
 ﻿using Firebase.Firestore;
 
-namespace JabaracDesign.Voick.Infrastructure.PathProvider
+namespace JABARACdesign.Firebase.Infrastructure.PathProvider
 {
     /// <summary>
     /// Firestoreのパスを提供するインターフェース

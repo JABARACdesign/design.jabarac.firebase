@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Firebase.Firestore;
 using JABARACdesign.Base.Application.Interface;
+using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.Helper;
-using JABARACdesign.Base.Infrastructure.Dto;
-using JABARACdesign.Base.Infrastructure.Network.API;
-using JABARACdesign.Base.Infrastructure.Network.Client;
+using JABARACdesign.Base.Infrastructure.API;
+using JABARACdesign.Base.Infrastructure.API.DocumentExists;
+using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
-using JabaracDesign.Voick.Infrastructure.PathProvider;
+using JABARACdesign.Firebase.Infrastructure.PathProvider;
+using UnityEditor.PackageManager;
 using VContainer;
-using StatusCode = JABARACdesign.Base.Domain.Entity.API.APIStatus.Code;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Client
+namespace JABARACdesign.Firebase.Infrastructure.Client
 {
     /// <summary>
     /// Firestoreのバッチ処理の操作インターフェース
@@ -108,17 +109,17 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 {
                     var errorMessage = $"FireStoreで対象のドキュメントが見つかりませんでした";
                     LogHelper.Error(message: errorMessage);
-                    return new APIResponse<TData>(status: StatusCode.Error, data: default, errorMessage: errorMessage);
+                    return new APIResponse<TData>(status: APIDefinition.Code.Error, data: default, errorMessage: errorMessage);
                 }
                 
                 var data = snapshot.ConvertTo<TData>();
-                return new APIResponse<TData>(status: StatusCode.Success, data: data);
+                return new APIResponse<TData>(status: APIDefinition.Code.Success, data: data);
             }
             catch (Exception ex)
             {
                 var errorMessage = $"FireStoreからデータの取得に失敗しました :{docRef}, {ex.Message}";
                 LogHelper.Error(message: errorMessage);
-                return new APIResponse<TData>(status: StatusCode.Error, data: default, errorMessage: errorMessage);
+                return new APIResponse<TData>(status: APIDefinition.Code.Error, data: default, errorMessage: errorMessage);
             }
         }
         
@@ -130,7 +131,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// <param name="isSpecificId">作成するドキュメントが特定IDをもつか</param>
         /// <returns>
         /// 操作の結果を示すIAPIResponse。
-        /// 成功した場合はStatusCode.Success、失敗した場合は StatusCode.Error とエラーメッセージを含む。
+        /// 成功した場合はAPIDefinition.Code.Success、失敗した場合は APIDefinition.Code.Error とエラーメッセージを含む。
         /// </returns>
         public async UniTask<IAPIResponse> CreateAsync<TData>(TData data, bool isSpecificId)
         {
@@ -147,13 +148,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     await collectionRef.AddAsync(documentData: data);
                 }
                 
-                return new APIResponse(status: StatusCode.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
                 var errorMessage = $"FireStoreへのデータの作成に失敗しました:{nameof(TData)}, {ex.Message}";
                 LogHelper.Error(message: errorMessage);
-                return new APIResponse(status: StatusCode.Error, errorMessage: errorMessage);
+                return new APIResponse(status: APIDefinition.Code.Error, errorMessage: errorMessage);
             }
         }
         
@@ -170,13 +171,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 await docRef.SetAsync(documentData: data);
                 
-                return new APIResponse(status: StatusCode.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
                 LogHelper.Error(message: $"FireStoreのデータの更新に失敗しました : {docRef}, {ex.Message}");
                 
-                return new APIResponse(status: StatusCode.Error);
+                return new APIResponse(status: APIDefinition.Code.Error);
             }
         }
         
@@ -191,12 +192,12 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             try
             {
                 await docRef.DeleteAsync();
-                return new APIResponse(status: StatusCode.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
                 LogHelper.Error(message: $"FireStoreからデータの削除に失敗しました : {docRef}, {ex.Message}");
-                return new APIResponse(status: StatusCode.Error);
+                return new APIResponse(status: APIDefinition.Code.Error);
             }
         }
         
@@ -215,14 +216,14 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 var snapshot = await docRef.GetSnapshotAsync();
                 return new APIResponse<DocumentExistsDto>(
-                    status: StatusCode.Success,
+                    status: APIDefinition.Code.Success,
                     data: new DocumentExistsDto(isExists: snapshot.Exists));
             }
             catch (Exception ex)
             {
                 LogHelper.Error(message: $"FireStoreのドキュメントの存在チェックに失敗しました : {identifier}, {ex.Message}");
                 return new APIResponse<DocumentExistsDto>(
-                    status: StatusCode.Error,
+                    status: APIDefinition.Code.Error,
                     data: new DocumentExistsDto(isExists: false));
             }
         }
@@ -243,12 +244,12 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 }
                 
                 await batch.CommitAsync();
-                return new APIResponse(status: StatusCode.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
                 LogHelper.Error(message: $"Firestoreのバッチ処理に失敗しました: {ex.Message}");
-                return new APIResponse(status: StatusCode.Error);
+                return new APIResponse(status: APIDefinition.Code.Error);
             }
         }
     }

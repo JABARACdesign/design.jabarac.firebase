@@ -1,7 +1,8 @@
 ﻿using Firebase.Auth;
 using JABARACdesign.Base.Domain.Entity.Helper;
+using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
+namespace JABARACdesign.Firebase.Infrastructure.Initializer
 {
     /// <summary>
     /// Firebaseの認証の初期化クラス

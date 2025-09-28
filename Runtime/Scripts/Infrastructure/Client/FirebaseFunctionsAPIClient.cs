@@ -4,17 +4,16 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Definition;
-using JABARACdesign.Base.Domain.Entity.API;
 using JABARACdesign.Base.Domain.Entity.Helper;
 using JABARACdesign.Base.Domain.Interface;
-using JABARACdesign.Base.Infrastructure.Network.API;
-using JABARACdesign.Base.Infrastructure.Network.Client;
+using JABARACdesign.Base.Infrastructure.API;
+using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
-using UnityEngine.Networking;
 using Newtonsoft.Json;
+using UnityEngine.Networking;
 using VContainer;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Client
+namespace JABARACdesign.Firebase.Infrastructure.Client
 {
     /// <summary>
     /// Firebase Functions APIクライアントクラス。
@@ -140,11 +139,11 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 if (webRequest.result != UnityWebRequest.Result.Success)
                 {
                     return new APIResponse(
-                        status: APIStatus.Code.Error,
+                        status: APIDefinition.Code.Error,
                         errorMessage: $"HTTP エラー: {webRequest.error}");
                 }
                 
-                return new APIResponse(status: APIStatus.Code.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
@@ -195,11 +194,11 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 if (webRequest.result != UnityWebRequest.Result.Success)
                 {
                     return new APIResponse(
-                        status: APIStatus.Code.Error,
+                        status: APIDefinition.Code.Error,
                         errorMessage: $"HTTP エラー: {webRequest.error}");
                 }
                 
-                return new APIResponse(status: APIStatus.Code.Success);
+                return new APIResponse(status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
@@ -329,7 +328,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 LogHelper.Error(message: $"リクエストエラー: {uri}, {webRequest.error}");
                 return new APIResponse<TResponseData>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: default,
                     errorMessage: $"HTTP エラー: {webRequest.error}");
             }
@@ -339,14 +338,14 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var resultJson = webRequest.downloadHandler.text;
                 var responseData = JsonConvert.DeserializeObject<TResponseData>(value: resultJson);
                 return new APIResponse<TResponseData>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: responseData);
             }
             catch (JsonException ex)
             {
                 LogHelper.Error(message: $"レスポンスのデシリアライズに失敗: {uri}, {ex.Message}");
                 return new APIResponse<TResponseData>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: default,
                     errorMessage: "レスポンス形式が不正です");
             }
@@ -363,14 +362,14 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 LogHelper.Error(message: $"リクエストがキャンセルされました: {uri}");
                 return new APIResponse<TResponseData>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: default,
                     errorMessage: "リクエストがキャンセルされました");
             }
             
             LogHelper.Error(message: $"リクエスト中にエラーが発生しました: {uri}, {ex.Message}");
             return new APIResponse<TResponseData>(
-                status: APIStatus.Code.Error,
+                status: APIDefinition.Code.Error,
                 data: default,
                 errorMessage: $"エラーが発生しました: {ex.Message}");
         }
@@ -384,13 +383,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 LogHelper.Error(message: $"リクエストがキャンセルされました: {uri}");
                 return new APIResponse(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     errorMessage: "リクエストがキャンセルされました");
             }
             
             LogHelper.Error(message: $"リクエスト中にエラーが発生しました: {uri}, {ex.Message}");
             return new APIResponse(
-                status: APIStatus.Code.Error,
+                status: APIDefinition.Code.Error,
                 errorMessage: $"エラーが発生しました: {ex.Message}");
         }
     }

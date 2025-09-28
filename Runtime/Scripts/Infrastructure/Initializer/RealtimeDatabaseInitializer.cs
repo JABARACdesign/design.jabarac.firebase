@@ -1,7 +1,8 @@
 ﻿using Firebase.Database;
 using JABARACdesign.Base.Domain.Entity.Helper;
+using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Initializer
+namespace JABARACdesign.Firebase.Infrastructure.Initializer
 {
     /// <summary>
     /// RealtimeDatabaseの初期化クラス

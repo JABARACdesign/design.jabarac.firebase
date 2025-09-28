@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Firebase.Database;
 using JABARACdesign.Base.Application.Interface;
-using JABARACdesign.Base.Domain.Entity.API;
+using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Helper;
-using JABARACdesign.Base.Infrastructure.Network;
-using JABARACdesign.Base.Infrastructure.Network.API;
-using JABARACdesign.Base.Infrastructure.Network.Client;
+using JABARACdesign.Base.Infrastructure.API;
+using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using UnityEngine;
 using VContainer;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Client
+namespace JABARACdesign.Firebase.Infrastructure.Client
 {
     /// <summary>
     /// FirebaseのRealtimeDatabaseを用いたマスターデータに関するクライアントクラス。
@@ -119,7 +118,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var data = JsonHelper.FromJsonList<TDto>(json: json);
                 
                 return new APIResponse<List<TDto>>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: data,
                     errorMessage: null
                 );
@@ -127,7 +126,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             catch (Exception e)
             {
                 return new APIResponse<List<TDto>>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"データの取得に失敗しました。:{e.Message}"
                 );
@@ -149,7 +148,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var dto = JsonUtility.FromJson<TDto>(json: json);
                 
                 return new APIResponse<TDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: dto,
                     errorMessage: null
                 );
@@ -157,7 +156,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             catch (Exception e)
             {
                 return new APIResponse<TDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: default,
                     errorMessage: $"データの取得に失敗しました。:{e.Message}"
                 );

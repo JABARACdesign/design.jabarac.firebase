@@ -5,14 +5,12 @@ using Firebase.Storage;
 using JABARACdesign.Base.Application.Interface;
 using JABARACdesign.Base.Domain.Definition;
 using JABARACdesign.Base.Domain.Entity.Helper;
-using JABARACdesign.Base.Infrastructure.Network;
-using JABARACdesign.Base.Infrastructure.Network.API;
-using JABARACdesign.Base.Infrastructure.Network.Client;
+using JABARACdesign.Base.Infrastructure.API;
+using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using VContainer;
-using StatusCode = JABARACdesign.Base.Domain.Entity.API.APIStatus.Code;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Client
+namespace JABARACdesign.Firebase.Infrastructure.Client
 {
     /// <summary>
     /// FirebaseStorageのクライアントクラス。
@@ -59,13 +57,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     filePath: localPath, cancelToken: 
                     cancellationToken);
                 return new APIResponse(
-                    status: StatusCode.Success);
+                    status: APIDefinition.Code.Success);
             }
             catch (Exception ex)
             {
                 var errorMessage = $"Cloud Storageへのファイルアップロードに失敗しました: {ex.Message}";
                 LogHelper.Error(message: errorMessage);
-                return new APIResponse(status: StatusCode.Error, errorMessage: errorMessage);
+                return new APIResponse(status: APIDefinition.Code.Error, errorMessage: errorMessage);
             }
         }
         
@@ -89,13 +87,13 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     destinationFilePath: localPath, 
                     cancelToken: cancellationToken);
                 
-                return new APIResponse<string>(status: StatusCode.Success, data: path);
+                return new APIResponse<string>(status: APIDefinition.Code.Success, data: path);
             }
             catch (Exception ex)
             {
                 var errorMessage = $"Cloud Storageからのファイルダウンロードに失敗しました: {ex.Message}";
                 LogHelper.Error(message: errorMessage);
-                return new APIResponse<string>(status: StatusCode.Error, data: "", errorMessage: errorMessage);
+                return new APIResponse<string>(status: APIDefinition.Code.Error, data: "", errorMessage: errorMessage);
             }
         }
         
@@ -113,12 +111,12 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var storageReference = GetFileReference(path);
                 var result = await storageReference.GetMetadataAsync();
                 return string.IsNullOrEmpty(value: result.Path)
-                    ? new APIResponse<bool>(status: StatusCode.Error, data: false)
-                    : new APIResponse<bool>(status: StatusCode.Success, data: true);
+                    ? new APIResponse<bool>(status: APIDefinition.Code.Error, data: false)
+                    : new APIResponse<bool>(status: APIDefinition.Code.Success, data: true);
             }
             catch (Exception)
             {
-                return new APIResponse<bool>(status: StatusCode.Error, data: false);
+                return new APIResponse<bool>(status: APIDefinition.Code.Error, data: false);
             }
         }
         

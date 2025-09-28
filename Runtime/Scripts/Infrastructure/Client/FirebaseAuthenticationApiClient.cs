@@ -5,14 +5,20 @@ using Cysharp.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
 using JABARACdesign.Base.Application.Interface;
-using JABARACdesign.Base.Domain.Entity.API;
-using JABARACdesign.Base.Infrastructure.Dto.API;
-using JABARACdesign.Base.Infrastructure.Network.API;
-using JABARACdesign.Base.Infrastructure.Network.Client;
+using JABARACdesign.Base.Application.Result.EmailExists;
+using JABARACdesign.Base.Domain.Definition;
+using JABARACdesign.Base.Infrastructure.API;
+using JABARACdesign.Base.Infrastructure.API.CreateAnonymousUser;
+using JABARACdesign.Base.Infrastructure.API.CreateUserWithEmailAndPassword;
+using JABARACdesign.Base.Infrastructure.API.EmailExists;
+using JABARACdesign.Base.Infrastructure.API.GetIsLoggedIn;
+using JABARACdesign.Base.Infrastructure.API.LogInWithEmailAndPassword;
+using JABARACdesign.Base.Infrastructure.API.UpgradeAnonymousAccount;
+using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using VContainer;
 
-namespace JABARACdesign.Firebase.Infrastructure.Network.Client
+namespace JABARACdesign.Firebase.Infrastructure.Client
 {
     /// <summary>
     /// Firebaseの認証クライアント
@@ -39,7 +45,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
         /// <param name="email">メールアドレス</param>
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>レスポンス</returns>
-        public async UniTask<IAPIResponse<EmailExistsResponse>> GetIsEmailExistsAsync(
+        public async UniTask<IAPIResponse<EmailExistsResult>> GetIsEmailExistsAsync(
             string email,
             CancellationToken cancellationToken = default)
         {
@@ -52,26 +58,26 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 var isExists = enumerable.Any();
                 
                 var entity = new EmailExistsResponseDto(isExists: isExists)
-                    .ToEntity();
+                    .ToResult();
                 
-                return new APIResponse<EmailExistsResponse>(
-                    status: APIStatus.Code.Success,
+                return new APIResponse<EmailExistsResult>(
+                    status: APIDefinition.Code.Success,
                     data: entity,
                     errorMessage: null);
             }
             catch (OperationCanceledException)
             {
                 // キャンセルされた場合
-                return new APIResponse<EmailExistsResponse>(
-                    status: APIStatus.Code.Error,
+                return new APIResponse<EmailExistsResult>(
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "キャンセルされました。");
             }
             catch (Exception)
             {
                 // エラーが発生した場合
-                return new APIResponse<EmailExistsResponse>(
-                    status: APIStatus.Code.Error,
+                return new APIResponse<EmailExistsResult>(
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "メールアドレスの存在チェックに失敗しました。");
             }
@@ -98,7 +104,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     user.DisplayName ?? string.Empty);
                 
                 return new APIResponse<CreateAnonymousUserResponseDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: dto,
                     errorMessage: null);
             }
@@ -106,7 +112,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // キャンセルされた場合
                 return new APIResponse<CreateAnonymousUserResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "匿名ユーザー登録がキャンセルされました。");
             }
@@ -114,7 +120,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // エラーが発生した場合
                 return new APIResponse<CreateAnonymousUserResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"匿名ユーザー登録に失敗しました。:{e.Message}");
             }
@@ -158,7 +164,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     displayName: user.DisplayName);
                 
                 return new APIResponse<CreateUserWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: dto,
                     errorMessage: null);
             }
@@ -166,7 +172,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // キャンセルされた場合
                 return new APIResponse<CreateUserWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "ユーザー登録がキャンセルされました。");
             }
@@ -174,7 +180,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // エラーが発生した場合
                 return new APIResponse<CreateUserWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"ユーザー登録に失敗しました。:{e.Message}");
             }
@@ -201,7 +207,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 if (user == null)
                 {
                     return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                        status: APIStatus.Code.Error,
+                        status: APIDefinition.Code.Error,
                         data: null,
                         errorMessage: "ログインしていません。");
                 }
@@ -209,7 +215,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 if (!user.IsAnonymous)
                 {
                     return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                        status: APIStatus.Code.Error,
+                        status: APIDefinition.Code.Error,
                         data: null,
                         errorMessage: "匿名ユーザーではありません。");
                 }
@@ -239,28 +245,28 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     displayName: result.User.DisplayName ?? displayName);
 
                 return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: dto,
                     errorMessage: null);
             }
             catch (OperationCanceledException)
             {
                 return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "アカウントアップグレードがキャンセルされました。");
             }
             catch (FirebaseException ex)
             {
                 return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"アカウントアップグレードに失敗しました：{ex.Message}");
             }
             catch (Exception e)
             {
                 return new APIResponse<UpgradeAnonymousAccountResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"アカウントアップグレードに失敗しました：{e.Message}");
             }
@@ -279,7 +285,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                 
                 if (!isLoggedIn)
                     return new APIResponse<GetIsLoggedInDto>(
-                        status: APIStatus.Code.Success,
+                        status: APIDefinition.Code.Success,
                         data: new GetIsLoggedInDto(
                             isLoggedIn: false,
                             userId: null,
@@ -287,7 +293,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                         errorMessage: null);
                 
                 return new APIResponse<GetIsLoggedInDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: new GetIsLoggedInDto(
                         isLoggedIn: true,
                         userId: user.UserId,
@@ -298,7 +304,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // エラーが発生した場合
                 return new APIResponse<GetIsLoggedInDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"ユーザー登録に失敗しました。:{e.Message}");
             }
@@ -332,7 +338,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
                     displayName: user.DisplayName);
                 
                 return new APIResponse<LogInWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Success,
+                    status: APIDefinition.Code.Success,
                     data: dto,
                     errorMessage: null);
             }
@@ -340,7 +346,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // キャンセルされた場合
                 return new APIResponse<LogInWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: "ログインがキャンセルされました。");
             }
@@ -348,7 +354,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Network.Client
             {
                 // エラーが発生した場合
                 return new APIResponse<LogInWithEmailAndPasswordResponseDto>(
-                    status: APIStatus.Code.Error,
+                    status: APIDefinition.Code.Error,
                     data: null,
                     errorMessage: $"ログインに失敗しました。:{e.Message}");
             }
