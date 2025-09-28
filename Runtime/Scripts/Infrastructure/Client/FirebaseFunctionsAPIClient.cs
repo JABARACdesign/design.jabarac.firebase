@@ -20,7 +20,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// UnityWebRequestを使用して実装。
     /// Functions SDKに依存すると、他の手段との代替性が低下するため。
     /// </summary>
-    public class FirebaseFunctionsApiClient : IFunctionApiClient
+    public class FirebaseFunctionsAPIClient : IFunctionAPIClient
     {
         private readonly IAuthenticationInitializer _initializer;
         
@@ -29,7 +29,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// </summary>
         /// <param name="initializer">イニシャライザ</param>
         [Inject]
-        public FirebaseFunctionsApiClient(IAuthenticationInitializer initializer)
+        public FirebaseFunctionsAPIClient(IAuthenticationInitializer initializer)
         {
             _initializer = initializer;
         }
