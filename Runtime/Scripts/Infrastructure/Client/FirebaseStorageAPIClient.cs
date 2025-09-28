@@ -15,7 +15,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// FirebaseStorageのクライアントクラス。
     /// </summary>
-    public class FirebaseStorageApiClient : ICloudStorageClient
+    public class FirebaseStorageAPIClient : ICloudStorageClient
     {
         private readonly ICloudStorageInitializer _initializer;
         private readonly IPathProvider _pathProvider;
@@ -28,7 +28,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// <param name="pathProvider">ローカルのパスプロパイダ</param>
         /// <param name="initializer">Firebaseのイニシャライザ</param>
         [Inject]
-        public FirebaseStorageApiClient(
+        public FirebaseStorageAPIClient(
             ICloudStorageInitializer initializer,
             IPathProvider pathProvider)
         {

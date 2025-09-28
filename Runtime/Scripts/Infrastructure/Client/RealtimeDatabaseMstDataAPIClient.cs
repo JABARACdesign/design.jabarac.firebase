@@ -16,7 +16,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// FirebaseのRealtimeDatabaseを用いたマスターデータに関するクライアントクラス。
     /// </summary>
-    public class RealtimeDatabaseMstDataApiClient : IMstDataApiClient
+    public class RealtimeDatabaseMstDataAPIClient : IMstDataAPIClient
     {
         private FirebaseDatabase Database => _initializer.Database;
         
@@ -30,7 +30,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// <param name="pathProvider">パスプロパイダ</param>
         /// <param name="initializer"></param>
         [Inject]
-        public RealtimeDatabaseMstDataApiClient(
+        public RealtimeDatabaseMstDataAPIClient(
             IPathProvider pathProvider,
             IRealtimeDatabaseInitializer initializer)
         {

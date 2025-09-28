@@ -10,7 +10,6 @@ using JABARACdesign.Base.Infrastructure.API.DocumentExists;
 using JABARACdesign.Base.Infrastructure.Client;
 using JABARACdesign.Firebase.Infrastructure.Network.Initializer;
 using JABARACdesign.Firebase.Infrastructure.PathProvider;
-using UnityEditor.PackageManager;
 using VContainer;
 
 namespace JABARACdesign.Firebase.Infrastructure.Client
@@ -67,7 +66,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// Firestoreのクライアントクラス
     /// </summary>
-    public class FirebaseFirestoreApiClient : IUserDataApiClient
+    public class FirebaseFirestoreAPIClient : IUserDataAPIClient
     {
         private readonly IFirestoreInitializer _initializer;
         
@@ -81,7 +80,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// <param name="pathProvider">パスプロパイダ</param>
         /// <param name="initializer">Firebaseのイニシャライザ</param>
         [Inject]
-        public FirebaseFirestoreApiClient(
+        public FirebaseFirestoreAPIClient(
             IFirestorePathProvider pathProvider,
             IFirestoreInitializer initializer)
         {
@@ -206,7 +205,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// </summary>
         /// <param name="identifier">ドキュメントの識別子(未指定の場合は、パスプロパイダからドキュメントを特定する)</param>
         /// <returns>操作の結果を示すAPIResponse</returns>
-        public async UniTask<IAPIResponse<DocumentExistsDto>> ExistsAsync<TData>(string identifier = default)
+        public async UniTask<IAPIResponse<DocumentExistsDTO>> ExistsAsync<TData>(string identifier = default)
         {
             var docRef = string.IsNullOrEmpty(value: identifier)
                 ? _pathProvider.GetDocumentPath<TData>()
@@ -215,16 +214,16 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
             try
             {
                 var snapshot = await docRef.GetSnapshotAsync();
-                return new APIResponse<DocumentExistsDto>(
+                return new APIResponse<DocumentExistsDTO>(
                     status: APIDefinition.Code.Success,
-                    data: new DocumentExistsDto(isExists: snapshot.Exists));
+                    data: new DocumentExistsDTO(isExists: snapshot.Exists));
             }
             catch (Exception ex)
             {
                 LogHelper.Error(message: $"FireStoreのドキュメントの存在チェックに失敗しました : {identifier}, {ex.Message}");
-                return new APIResponse<DocumentExistsDto>(
+                return new APIResponse<DocumentExistsDTO>(
                     status: APIDefinition.Code.Error,
-                    data: new DocumentExistsDto(isExists: false));
+                    data: new DocumentExistsDTO(isExists: false));
             }
         }
         
