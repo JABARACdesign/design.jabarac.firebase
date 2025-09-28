@@ -74,7 +74,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>APIレスポンス</returns>
         public async UniTask<IAPIResponse<TResponseData>> SendAsync<TDto, TResponseData>(
-            IApiRequest<TDto> request,
+            IAPIRequest<TDto> request,
             CancellationToken cancellationToken = default)
         where TDto : IQueryParamConvertible
         {
@@ -159,7 +159,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>APIレスポンス</returns>
         public async UniTask<IAPIResponse> SendAsync<TDto>(
-            IApiRequest<TDto> request,
+            IAPIRequest<TDto> request,
             CancellationToken cancellationToken = default)
         where TDto : IQueryParamConvertible
         {
