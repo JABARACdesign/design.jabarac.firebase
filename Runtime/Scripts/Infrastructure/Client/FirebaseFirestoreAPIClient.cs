@@ -17,15 +17,15 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// Firestoreのバッチ処理の操作インターフェース
     /// </summary>
-    public interface IBatchOperation
+    public interface IFirestoreBatchOperation : JABARACdesign.Base.Infrastructure.Client.IBatchOperation
     {
         void Apply(WriteBatch batch, IFirestorePathProvider pathProvider);
     }
-    
+
     /// <summary>
     /// バッチ処理におけるデータの追加操作
     /// </summary>
-    public class SetOperation<TData> : IBatchOperation
+    public class SetOperation<TData> : IFirestoreBatchOperation
     {
         public TData Data { get; set; }
         
@@ -39,7 +39,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// バッチ処理におけるデータの更新操作
     /// </summary>
-    public class UpdateOperation<TData> : IBatchOperation
+    public class UpdateOperation<TData> : IFirestoreBatchOperation
     {
         public string FieldName { get; set; }
         public object FieldValue { get; set; }
@@ -54,7 +54,7 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
     /// <summary>
     /// バッチ処理におけるデータの削除操作
     /// </summary>
-    public class DeleteOperation<TData> : IBatchOperation
+    public class DeleteOperation<TData> : IFirestoreBatchOperation
     {
         public void Apply(WriteBatch batch, IFirestorePathProvider pathProvider)
         {
@@ -232,14 +232,18 @@ namespace JABARACdesign.Firebase.Infrastructure.Client
         /// </summary>
         /// <param name="batchOperations">バッチ処理の操作</param>
         /// <returns>操作の結果を示すAPIResponse</returns>
-        public async UniTask<IAPIResponse> ExecuteBatchAsync(IEnumerable<IBatchOperation> batchOperations)
+        public async UniTask<IAPIResponse> ExecuteBatchAsync(
+            IEnumerable<JABARACdesign.Base.Infrastructure.Client.IBatchOperation> batchOperations)
         {
             try
             {
                 var batch = Firestore.StartBatch();
                 foreach (var operation in batchOperations)
                 {
-                    operation.Apply(batch: batch, pathProvider: _pathProvider);
+                    if (operation is IFirestoreBatchOperation firestoreOperation)
+                    {
+                        firestoreOperation.Apply(batch: batch, pathProvider: _pathProvider);
+                    }
                 }
                 
                 await batch.CommitAsync();

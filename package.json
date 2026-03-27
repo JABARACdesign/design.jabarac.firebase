@@ -8,6 +8,7 @@
     "com.google.firebase.auth": "11.9.0",
     "com.google.firebase.app": "11.9.0",
     "com.google.firebase.firestore": "11.9.0",
+    "com.google.firebase.functions": "11.9.0",
     "com.google.firebase.storage" : "11.9.0",
     "com.google.firebase.messaging": "11.9.0",
     "com.google.firebase.crashlytics": "11.9.0",
